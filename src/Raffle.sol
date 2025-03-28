@@ -66,7 +66,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function fulfillRandomWords(
         uint256 requestId,
         uint256[] calldata randomWords
-    ) internal override {}
+    ) internal override {
+        uint256 winnerIndex = randomWords[0] % s_players.length;
+        address winner = s_players[winnerIndex];
+        payable(winner).transfer(address(this).balance);
+        emit Raffle__Winner(winner);
+        s_players = new address payable[](0);
+    }
 
     function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
