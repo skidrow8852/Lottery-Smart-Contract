@@ -1,26 +1,44 @@
 //// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 /**
  * @title A simple Raffle contract
  * @dev A contract for a raffle
  */
 
-contract Raffle {
+contract Raffle is VRFConsumerBaseV2Plus {
     // Errors
     error Raffle__InvalidEntranceFee();
+
+    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    uint32 private constant NUM_WORDS = 1;
+    uint32 private immutable i_callbackGasLimit;
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_raffleDuration;
+    bytes32 private immutable i_keyHash;
+    uint256 private immutable i_subscriptionId;
     address payable[] private s_players;
 
     // Events
     event Raffle__Winner(address winner);
     event Raffle__Entered(address indexed player);
 
-    constructor(uint256 entranceFee, uint256 raffleDuration) {
+    constructor(
+        uint256 entranceFee,
+        uint256 raffleDuration,
+        address vrfCoordinator,
+        bytes32 gasLane,
+        uint256 subscriptionId,
+        uint32 callbackGasLimit
+    ) VRFConsumerBaseV2Plus(vrfCoordinator) {
         i_entranceFee = entranceFee;
         i_raffleDuration = raffleDuration;
+        i_keyHash = gasLane;
+        i_callbackGasLimit = callbackGasLimit;
+        subscriptionId = i_subscriptionId;
     }
+
     function enterRaffle() external payable {
         if (msg.value < i_entranceFee) {
             revert Raffle__InvalidEntranceFee();
@@ -30,14 +48,25 @@ contract Raffle {
     }
 
     function pickWinner() external {
-        require(block.timestamp >= i_raffleDuration, "Raffle not ended yet");
-        uint256 index = uint256(
-            keccak256(abi.encodePacked(block.timestamp, block.prevrandao))
-        ) % s_players.length;
-        emit Raffle__Winner(s_players[index]);
-        s_players[index].transfer(address(this).balance);
-        s_players = new address payable[](0);
+        require(block.timestamp > i_raffleDuration, "Raffle not ended yet");
+        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
+            .RandomWordsRequest({
+                keyHash: i_keyHash,
+                subId: i_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: i_callbackGasLimit,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+                )
+            });
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
     }
+
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] calldata randomWords
+    ) internal override {}
 
     function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
