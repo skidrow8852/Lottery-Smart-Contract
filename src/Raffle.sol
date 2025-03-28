@@ -10,7 +10,15 @@ import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/V
 contract Raffle is VRFConsumerBaseV2Plus {
     // Errors
     error Raffle__InvalidEntranceFee();
+    error Raffle__RaffleNotOpen();
 
+    // Type declarations
+    enum RaffleState {
+        OPEN,
+        CALCULATING
+    }
+
+    // State variables
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
     uint32 private immutable i_callbackGasLimit;
@@ -19,6 +27,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     bytes32 private immutable i_keyHash;
     uint256 private immutable i_subscriptionId;
     address payable[] private s_players;
+    RaffleState private s_raffleState;
 
     // Events
     event Raffle__Winner(address winner);
@@ -37,11 +46,15 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_keyHash = gasLane;
         i_callbackGasLimit = callbackGasLimit;
         subscriptionId = i_subscriptionId;
+        s_raffleState = RaffleState.OPEN;
     }
 
     function enterRaffle() external payable {
         if (msg.value < i_entranceFee) {
             revert Raffle__InvalidEntranceFee();
+        }
+        if (s_raffleState == RaffleState.CALCULATING) {
+            revert Raffle__RaffleNotOpen();
         }
         s_players.push(payable(msg.sender));
         emit Raffle__Entered(msg.sender);
@@ -49,6 +62,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     function pickWinner() external {
         require(block.timestamp > i_raffleDuration, "Raffle not ended yet");
+        s_raffleState = RaffleState.CALCULATING;
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
             .RandomWordsRequest({
                 keyHash: i_keyHash,
@@ -72,6 +86,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         payable(winner).transfer(address(this).balance);
         emit Raffle__Winner(winner);
         s_players = new address payable[](0);
+        s_raffleState = RaffleState.OPEN;
     }
 
     function getEntranceFee() public view returns (uint256) {
