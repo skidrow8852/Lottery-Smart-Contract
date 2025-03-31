@@ -63,13 +63,26 @@ contract Raffle is VRFConsumerBaseV2Plus {
         s_players.push(payable(msg.sender));
         emit Raffle__Entered(msg.sender);
     }
+
+    // when should the winner be picked?
+    // @dev This function is called by the Chainlink Keeper to check if the upkeep is needed
+    function checkUpkeep(
+        bytes memory /* checkData */
+    ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
+        bool isOpen = (s_raffleState == RaffleState.OPEN);
+        bool timePassed = ((block.timestamp - s_lastTimestamp) >=
+            i_raffleDuration);
+        bool hasPlayers = (s_players.length > 0);
+        upkeepNeeded = (isOpen && timePassed && hasPlayers);
+    }
+
     // @dev This function is called by the owner of the contract to pick a winner
     // @dev It will call the VRF Coordinator to get a random number
-    function pickWinner() external {
-        require(
-            (block.timestamp - s_lastTimestamp) < i_raffleDuration,
-            "Raffle ended"
-        );
+    function performUpKeep() external {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded) {
+            revert Raffle__RaffleNotOpen();
+        }
         s_raffleState = RaffleState.CALCULATING;
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
             .RandomWordsRequest({
@@ -99,8 +112,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
         s_raffleState = RaffleState.OPEN;
         s_lastTimestamp = block.timestamp;
     }
-
+    // @dev This function is called by the owner of the contract to get the entrance fee
     function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
+    }
+
+    // @dev This function is called by the owner of the contract to get the players
+    function getPlayers() public view returns (address payable[] memory) {
+        return s_players;
     }
 }
