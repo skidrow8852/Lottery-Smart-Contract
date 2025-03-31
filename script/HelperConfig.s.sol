@@ -49,7 +49,7 @@ contract HelperConfig is CodeConstrants, Script {
     /// @return NetworkConfig The configuration for the Goerli network
     function getConfigByChainId(
         uint256 chainId
-    ) public view returns (NetworkConfig memory) {
+    ) public returns (NetworkConfig memory) {
         if (networkConfigs[chainId].vrfCoordinator != address(0)) {
             return networkConfigs[chainId];
         } else if (chainId == SEPOLIA) {
@@ -57,6 +57,12 @@ contract HelperConfig is CodeConstrants, Script {
         } else {
             revert HelperConfig__InvalidNetwork(chainId);
         }
+    }
+
+    /// @dev This function is used to get the configuration for the current network
+    /// @return NetworkConfig The configuration for the current network
+    function getConfig() public returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
     }
 
     /// @dev This function is used to get the configuration for the Anvil network
