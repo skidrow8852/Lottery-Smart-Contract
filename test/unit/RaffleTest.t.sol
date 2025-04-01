@@ -28,6 +28,8 @@ contract RaffleTest is Test {
         gasLane = config.gasLane;
         subscriptionId = config.subscriptionId;
         callbackGasLimit = config.callbackGasLimit;
+        vm.deal(USER, STARTING_BALANCE);
+        vm.startPrank(USER);
     }
 
     // Check that the raffle is in the open state
@@ -39,15 +41,19 @@ contract RaffleTest is Test {
     }
     // Check that the entrance fee is set correctly
     function testRaffleRevertsWhenNotEnoughETHEntered() external {
-        vm.prank(USER);
         vm.expectRevert(Raffle.Raffle__InvalidEntranceFee.selector);
         raffle.enterRaffle();
     }
     // Check if players can enter the raffle
     function testRaffleRecordsPlayersWhenTheyEnter() external {
-        vm.deal(USER, STARTING_BALANCE);
-        vm.prank(USER);
         raffle.enterRaffle{value: entranceFee}();
         assertEq(raffle.getPlayers().length, 1);
+    }
+
+    // Check if the players are recorded correctly
+    function testRaffleEmitsEventOnEnter() external {
+        vm.expectEmit(true, false, false, false);
+        emit Raffle.Raffle__Entered(USER);
+        raffle.enterRaffle{value: entranceFee}();
     }
 }
