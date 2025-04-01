@@ -2,6 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+rpc_url = "https://eth-sepolia.g.alchemy.com/v2/bDNPmQ-EUDIK75UO54iDNRaNcR2nvNkD"
 remappings= ["@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

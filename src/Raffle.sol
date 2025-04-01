@@ -121,4 +121,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function getPlayers() public view returns (address payable[] memory) {
         return s_players;
     }
+
+    // @dev This function is called by the owner of the contract to get the raffle
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
 }

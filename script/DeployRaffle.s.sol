@@ -11,7 +11,7 @@ contract DeployRaffle is Script {
         HelperConfig config = new HelperConfig();
 
         HelperConfig.NetworkConfig memory networkConfig = config.getConfig();
-
+        vm.chainId(11155111); // Sepolia
         vm.startBroadcast();
         Raffle raffle = new Raffle(
             networkConfig.entranceFee,

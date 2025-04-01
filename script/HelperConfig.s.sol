@@ -7,7 +7,6 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
 abstract contract CodeConstrants {
     uint256 public constant MAINNET_FORK = 1115511;
     uint256 public constant GOERLI_FORK = 5;
-    uint256 public constant LOCALHOST = 31337;
     uint256 public constant SEPOLIA = 11155111;
     uint96 public MOCK_BASE_FEE = 0.25 ether;
     uint96 public MOCK_GAS_PRICE_LINK = 1e9; // 0.000000001 LINK per gas
