@@ -14,7 +14,7 @@ contract RaffleTest is Test {
     uint256 interval;
     address vrfCoordinator;
     bytes32 gasLane;
-    uint64 subscriptionId;
+    uint256 subscriptionId;
     uint32 callbackGasLimit;
 
     function setUp() external {
@@ -54,6 +54,19 @@ contract RaffleTest is Test {
     function testRaffleEmitsEventOnEnter() external {
         vm.expectEmit(true, false, false, false);
         emit Raffle.Raffle__Entered(USER);
+        raffle.enterRaffle{value: entranceFee}();
+    }
+
+    // do not allow entrance when calculating
+    function testRaffleDoesNotAllowEntranceWhenCalculating() external {
+        raffle.enterRaffle{value: entranceFee}();
+        vm.stopPrank();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
+        raffle.performUpKeep();
+        vm.startPrank(USER);
+        // This should revert because the raffle is in the CALCULATING state
         raffle.enterRaffle{value: entranceFee}();
     }
 }
