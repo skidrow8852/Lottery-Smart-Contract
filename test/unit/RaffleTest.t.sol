@@ -43,4 +43,11 @@ contract RaffleTest is Test {
         vm.expectRevert(Raffle.Raffle__InvalidEntranceFee.selector);
         raffle.enterRaffle();
     }
+    // Check if players can enter the raffle
+    function testRaffleRecordsPlayersWhenTheyEnter() external {
+        vm.deal(USER, STARTING_BALANCE);
+        vm.prank(USER);
+        raffle.enterRaffle{value: entranceFee}();
+        assertEq(raffle.getPlayers().length, 1);
+    }
 }
