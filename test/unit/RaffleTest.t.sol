@@ -31,10 +31,16 @@ contract RaffleTest is Test {
     }
 
     // Check that the raffle is in the open state
-    function testRaffleInitializedInOpenState() external {
+    function testRaffleInitializedInOpenState() external view {
         assertEq(
             uint256(raffle.getRaffleState()),
             uint256(Raffle.RaffleState.OPEN)
         );
+    }
+    // Check that the entrance fee is set correctly
+    function testRaffleRevertsWhenNotEnoughETHEntered() external {
+        vm.prank(USER);
+        vm.expectRevert(Raffle.Raffle__InvalidEntranceFee.selector);
+        raffle.enterRaffle();
     }
 }
