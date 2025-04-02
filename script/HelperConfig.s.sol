@@ -51,7 +51,7 @@ contract HelperConfig is CodeConstrants, Script {
     ) public returns (NetworkConfig memory) {
         if (networkConfigs[chainId].vrfCoordinator != address(0)) {
             return networkConfigs[chainId];
-        } else if (chainId == SEPOLIA) {
+        } else if (chainId == SEPOLIA || chainId == 31337) {
             return getOrCreateAnvilEthConfig();
         } else {
             revert HelperConfig__InvalidNetwork(chainId);
