@@ -6,10 +6,7 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
 
 contract CreateSubscription is Script {
     // Create a subscription with Config
-    function createSubscriptionWithConfig()
-        external
-        returns (uint256, address)
-    {
+    function createSubscriptionWithConfig() public returns (uint256, address) {
         HelperConfig config = new HelperConfig();
         address vrfCoordinator = config.getConfig().vrfCoordinator;
 
@@ -28,5 +25,23 @@ contract CreateSubscription is Script {
 
         vm.stopBroadcast();
         return (subscriptionId, vrfCoordinator);
+    }
+
+    function run() public {
+        createSubscriptionWithConfig();
+    }
+}
+
+contract FundSubscription is Script {
+    uint256 public constant FUND_AMOUNT = 3 ether;
+    // Fund the subscription with Config
+    function fundSubscriptionWithConfig() public {
+        HelperConfig config = new HelperConfig();
+        address vrfCoordinator = config.getConfig().vrfCoordinator;
+        uint256 subId = config.getConfig().subscriptionId;
+    }
+
+    function run() public {
+        fundSubscriptionWithConfig();
     }
 }

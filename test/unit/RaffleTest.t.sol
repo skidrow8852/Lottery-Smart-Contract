@@ -56,17 +56,22 @@ contract RaffleTest is Test {
         emit Raffle.Raffle__Entered(USER);
         raffle.enterRaffle{value: entranceFee}();
     }
+    // Check if the entrance fee is set correctly
+    function testRaffleInvalidEntranceFee() external {
+        vm.expectRevert(Raffle.Raffle__InvalidEntranceFee.selector);
+        raffle.enterRaffle{value: 0}();
+    }
 
     // do not allow entrance when calculating
     function testRaffleDoesNotAllowEntranceWhenCalculating() external {
+        // Enter the raffle
         raffle.enterRaffle{value: entranceFee}();
-        vm.stopPrank();
+        // Move the block timestamp forward by the interval
         vm.warp(block.timestamp + interval + 1);
-        vm.roll(block.number + 1);
-        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
+        // Call performUpkeep to trigger the calculation of the winner
         raffle.performUpKeep();
-        vm.startPrank(USER);
-        // This should revert because the raffle is in the CALCULATING state
+        // Expect a revert when trying to enter the raffle again
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
         raffle.enterRaffle{value: entranceFee}();
     }
 }
