@@ -61,4 +61,12 @@ contract RaffleTest is Test {
         vm.expectRevert(Raffle.Raffle__InvalidEntranceFee.selector);
         raffle.enterRaffle{value: 0}();
     }
+    // check Upkeep
+    function testCheckUpkeepReturnsFalseIfNoBalance() external {
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+
+        assert(!upkeepNeeded);
+    }
 }
